@@ -19,10 +19,19 @@ client = mqtt.Client()
 client.connect(mqtt_server, 1883, 60)
 client.loop_start()
 
+def connect_igrill(addr):
+  while True:
+    try:
+      return IGrillV2Peripheral(addr)
+    except:
+      log.warn("Failed to connect, will retry")
+      time.sleep(30)
+
+
 if __name__ == '__main__':
- periph = IGrillV2Peripheral(ADDRESS)
+ periph = connect_igrill(ADDRESS)
+ last_online_status=True
  while True:
-  bt_online=True
   while True:
     try:
       temperature=periph.read_temperature()
@@ -30,13 +39,15 @@ if __name__ == '__main__':
       break
     except BTLEException as ex:
       log.warn("Failed to get values", exc_info=True)
-      if bt_online:
-        bt_online=False
+      if last_online_status:
+        last_online_status=False
         client.publish("bbq/igrill_connected", "no")
-      time.sleep(30)
+    periph = connect_igrill(ADDRESS)
 
-  if not bt_online:
+
+  if not last_online_status:
     client.publish("bbq/igrill_connected", "yes")
+    last_online_status=True
 
   # Probe 1
   if temperature[1] != 63536.0:
