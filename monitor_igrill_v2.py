@@ -27,6 +27,7 @@ if __name__ == '__main__':
     try:
       temperature=periph.read_temperature()
       battery=periph.read_battery()
+      break
     except BTLEException as ex:
       log.warn("Failed to get values", exc_info=True)
       if bt_online:
